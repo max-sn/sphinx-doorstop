@@ -2,7 +2,7 @@
 name = "sphinx-doorstop"
 version = "0.1.0.dev0"
 description = "A Sphinx extension allowing to include Doorstop documents and items in your Sphinx build."
-readme = "README.md"
+readme = "README.rst"
 requires-python = ">=3.13"
 authors = [{ name = "M.J.W. Snippe", email = "maxsnippe@gmail.com" }]
 dependencies = [
