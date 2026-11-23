@@ -13,6 +13,9 @@ dependencies = [
 ]
 
 [dependency-groups]
+dev = [
+    "sphinx-autobuild>=2025.8.25",
+]
 security = [
   "bandit>=1.9.4",
 ]
