@@ -1,0 +1,6 @@
+[tools]
+python = "3.13"
+uv = "0.13.9"
+
+[env]
+UV_NO_MANAGED_PYTHON = "1"
