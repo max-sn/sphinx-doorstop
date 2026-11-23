@@ -38,7 +38,7 @@ build-backend = "uv_build"
 
 [tool.tox]
 requires = ["tox>=4", "tox-uv-bare>=1"]
-env_list = [{ product = [["3.13"], ["test", "type"]] }, "style", "security"]
+env_list = [{ product = [["3.13", "3.14", "3.15"], ["test", "type"]] }, "style", "security"]
 
 [tool.tox.env_run_base]
 runner = "uv-venv-lock-runner"
