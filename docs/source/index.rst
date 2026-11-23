@@ -6,4 +6,5 @@
 
    quickstart
    howtos
+   features-and-roadmap
    reference
