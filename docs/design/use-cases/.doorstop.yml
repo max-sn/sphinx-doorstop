@@ -1,0 +1,5 @@
+settings:
+  digits: '2'
+  itemformat: markdown
+  prefix: UC
+  sep: ''
