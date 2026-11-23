@@ -6,6 +6,7 @@ import doorstop
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 from doorstop import build
+from myst_parser.parsers.docutils_ import Parser
 from myst_parser.parsers.sphinx_ import MystParser
 from sphinx.application import Sphinx
 from sphinx.domains import Domain
@@ -85,7 +86,11 @@ class DoorstopDocumentDirective(SphinxDirective):
 
         domain = cast(DoorstopDomain, self.env.get_domain("doorstop"))
         domain.add_document(doorstop_document)
-        markdown_parser = MystParser()
+
+        if hasattr(self.env, "myst_config"):
+            markdown_parser = MystParser()
+        else:
+            markdown_parser = Parser()
 
         document_level_section = nodes.section(
             ids=[doorstop_document.anchor], names=[doc.prefix]
@@ -120,7 +125,7 @@ class DoorstopDocumentDirective(SphinxDirective):
         self,
         item: doorstop.Item,
         domain: "DoorstopDomain",
-        markdown_parser: MystParser,
+        markdown_parser: MystParser | Parser,
     ) -> nodes.section:
         doorstop_item = DoorstopItem(
             uid=str(item.uid),
