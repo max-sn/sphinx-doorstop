@@ -4,7 +4,27 @@ version = "0.0.1.dev0"
 description = "A Sphinx extension allowing to include Doorstop documents and items in your Sphinx build."
 readme = "README.rst"
 requires-python = ">=3.13"
+license = "LGPL-3.0-or-later"
 authors = [{ name = "M.J.W. Snippe", email = "maxsnippe@gmail.com" }]
+keywords = [
+  "documentation",
+  "doorstop",
+  "requirements-management",
+  "sphinx",
+  "traceability",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Framework :: Sphinx :: Extension",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Topic :: Documentation :: Sphinx",
+  "Topic :: Software Development :: Documentation",
+  "Topic :: Text Editors :: Documentation",
+]
 dependencies = [
   "docutils>=0.23",
   "doorstop>=3.2",
@@ -14,7 +34,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "sphinx-autobuild>=2025.8.25",
+  "sphinx-autobuild>=2025.8.25",
 ]
 security = [
   "bandit>=1.9.4",
