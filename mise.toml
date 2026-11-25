@@ -7,4 +7,4 @@ UV_NO_MANAGED_PYTHON = "1"
 
 [tasks.devdocs]
 dir = "{{ config_root }}/docs"
-run = "uv run sphinx-autobuild ./source ./build/html --open-browser"
+run = "uv run sphinx-autobuild ./source ./build/html --open-browser --watch ./design"

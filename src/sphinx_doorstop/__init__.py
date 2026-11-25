@@ -77,6 +77,9 @@ class DoorstopDocumentDirective(SphinxDirective):
                 f"Doorstop document {doc_name} not found in {doorstop_root}"
             ) from e
 
+        # Add the document config file to the document dependencies
+        self.env.note_dependency(doc.config)
+
         doorstop_document = DoorstopDocument(
             prefix=doc.prefix,
             sphinx_doc_name=self.env.current_document.docname,
@@ -110,6 +113,10 @@ class DoorstopDocumentDirective(SphinxDirective):
             )
             for item in doc.items
         ]
+
+        # Also add all items to the document dependencies
+        for item in doc.items:
+            self.env.note_dependency(item.path)
 
         for depth, item_section in item_sections:
             last_section_of_current_level = document_level_section
