@@ -17,7 +17,7 @@ The default title for a document is the prefix specified as argument to
       prefix: UC
       sep: ''
     attributes:
-      defaults::
+      defaults:
         doc:
           title: "Use cases"
 
