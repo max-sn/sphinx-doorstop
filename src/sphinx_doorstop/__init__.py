@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import ClassVar, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 import doorstop
 from docutils import nodes
@@ -18,13 +18,16 @@ from sphinx.util.typing import ExtensionMetadata, RoleFunction
 
 from sphinx_doorstop._version import __version__
 
+if TYPE_CHECKING:
+    from sphinx.environment import BuildEnvironment
 
-class DoorstopError(SphinxError):
+
+class SphinxDoorstopError(SphinxError):
     category = "doorstop"
 
 
 @dataclass
-class DoorstopItem:
+class SphinxDoorstopItem:
     uid: str
     sphinx_doc_name: str
     source: doorstop.Item
@@ -36,7 +39,7 @@ class DoorstopItem:
 
 
 @dataclass
-class DoorstopDocument:
+class SphinxDoorstopDocument:
     prefix: str
     sphinx_doc_name: str
     source: doorstop.Document
@@ -48,7 +51,7 @@ class DoorstopDocument:
         return f"doorstop-doc-{self.prefix}"
 
 
-class DoorstopDocumentDirective(SphinxDirective):
+class SphinxDoorstopDocumentDirective(SphinxDirective):
     required_arguments = 1
     has_content = False
 
@@ -65,7 +68,7 @@ class DoorstopDocumentDirective(SphinxDirective):
         try:
             tree = build(root=doorstop_root)
         except doorstop.common.DoorstopError as e:
-            raise DoorstopError(
+            raise SphinxDoorstopError(
                 f"Failed to build doorstop tree in {doorstop_root}"
             ) from e
 
@@ -73,60 +76,35 @@ class DoorstopDocumentDirective(SphinxDirective):
         try:
             doc = tree.find_document(doc_name)
         except doorstop.common.DoorstopError as e:
-            raise DoorstopError(
+            raise SphinxDoorstopError(
                 f"Doorstop document {doc_name} not found in {doorstop_root}"
             ) from e
 
-        # Add the document config file to the document dependencies
-        self.env.note_dependency(doc.config)
+        add_doorstop_files_to_sphinx_rebuild_dependencies(doc, self.env)
 
-        doorstop_document = DoorstopDocument(
+        sphinx_doorstop_document = SphinxDoorstopDocument(
             prefix=doc.prefix,
             sphinx_doc_name=self.env.current_document.docname,
             source=doc,
             sep=doc.sep,
         )
 
+        # Use cast to get proper DoorstopDomain type
         domain = cast(DoorstopDomain, self.env.get_domain("doorstop"))
-        domain.add_document(doorstop_document)
+        domain.add_document(sphinx_doorstop_document)
 
+        # Check if MyST is already being used as parser by the global Sphinx build. If so, use a Sphinx based parser
+        # that knows about the included (MyST) extensions. If not, use the default docutils based parser.
         if hasattr(self.env, "myst_config"):
             markdown_parser = MystParser()
         else:
             markdown_parser = Parser()
 
-        document_level_section = nodes.section(
-            ids=[doorstop_document.anchor], names=[doc.prefix]
-        )
-        document_title = get_document_title(doc)
-        target_node = nodes.target("", "", ids=[doorstop_document.anchor])
-        title_node = nodes.title(document_title, document_title)
-
-        document_level_section += title_node
-        document_level_section += target_node
-
-        # Create a list of sections for all items, not yet nested based on depth
-        item_sections = [
-            (
-                item.depth - 1,
-                self.create_item_section(item, domain, markdown_parser),
+        return [
+            self.create_document_section(
+                sphinx_doorstop_document, domain, markdown_parser
             )
-            for item in doc.items
         ]
-
-        # Also add all items to the document dependencies
-        for item in doc.items:
-            self.env.note_dependency(item.path)
-
-        for depth, item_section in item_sections:
-            last_section_of_current_level = document_level_section
-            for _ in range(depth):
-                last_section_of_current_level = last_section_of_current_level.children[
-                    -1
-                ]
-            last_section_of_current_level += item_section
-
-        return [document_level_section]
 
     def create_item_section(
         self,
@@ -134,7 +112,7 @@ class DoorstopDocumentDirective(SphinxDirective):
         domain: "DoorstopDomain",
         markdown_parser: MystParser | Parser,
     ) -> nodes.section:
-        doorstop_item = DoorstopItem(
+        doorstop_item = SphinxDoorstopItem(
             uid=str(item.uid),
             sphinx_doc_name=self.env.current_document.docname,
             source=item,
@@ -181,6 +159,42 @@ class DoorstopDocumentDirective(SphinxDirective):
 
         return section
 
+    def create_document_section(
+        self,
+        sphinx_doorstop_document: SphinxDoorstopDocument,
+        domain: "DoorstopDomain",
+        markdown_parser: MystParser | Parser,
+    ) -> nodes.section:
+        doc = sphinx_doorstop_document.source
+        document_level_section = nodes.section(
+            ids=[sphinx_doorstop_document.anchor], names=[doc.prefix]
+        )
+        document_title = get_document_title(doc)
+        target_node = nodes.target("", "", ids=[sphinx_doorstop_document.anchor])
+        title_node = nodes.title(document_title, document_title)
+
+        document_level_section += title_node
+        document_level_section += target_node
+
+        # Create a list of sections for all items, not yet nested based on depth
+        item_sections = [
+            (
+                item.depth - 1,
+                self.create_item_section(item, domain, markdown_parser),
+            )
+            for item in doc.items
+        ]
+
+        for depth, item_section in item_sections:
+            last_section_of_current_level = document_level_section
+            for _ in range(depth):
+                last_section_of_current_level = last_section_of_current_level.children[
+                    -1
+                ]
+            last_section_of_current_level += item_section
+
+        return document_level_section
+
 
 class DoorstopDomain(Domain):
     name = "doorstop"
@@ -189,10 +203,12 @@ class DoorstopDomain(Domain):
         "ref": XRefRole(),
     }
     directives: ClassVar[dict[str, type[Directive]]] = {
-        "document": DoorstopDocumentDirective
+        "document": SphinxDoorstopDocumentDirective
     }
     # indices: ClassVar[list[type[Index]]] = [ItemIndex]
-    initial_data: ClassVar[dict[str, list[DoorstopItem] | list[DoorstopDocument]]] = {
+    initial_data: ClassVar[
+        dict[str, list[SphinxDoorstopItem] | list[SphinxDoorstopDocument]]
+    ] = {
         "items": [],  # object list
         "documents": [],  # object list
     }
@@ -220,16 +236,16 @@ class DoorstopDomain(Domain):
             for match in matches
         ]
 
-    def add_document(self, document: DoorstopDocument) -> None:
+    def add_document(self, document: SphinxDoorstopDocument) -> None:
         self.data["documents"].append(document)
 
-    def add_item(self, item: DoorstopItem) -> None:
+    def add_item(self, item: SphinxDoorstopItem) -> None:
         self.data["items"].append(item)
 
-    def get_items(self) -> list[DoorstopItem]:
+    def get_items(self) -> list[SphinxDoorstopItem]:
         return self.data["items"]
 
-    def get_documents(self) -> list[DoorstopDocument]:
+    def get_documents(self) -> list[SphinxDoorstopDocument]:
         return self.data["documents"]
 
     def clear_doc(self, docname: str) -> None:
@@ -245,6 +261,17 @@ def get_document_title(doc: doorstop.Document) -> str:
     if doc._attribute_defaults:
         return doc._attribute_defaults.get("doc", {}).get("title", doc.prefix)
     return doc.prefix
+
+
+def add_doorstop_files_to_sphinx_rebuild_dependencies(
+    doc: doorstop.Document, env: "BuildEnvironment"
+):
+    # Add the document config file to the document dependencies
+    env.note_dependency(doc.config)
+
+    # Also add all items to the document dependencies
+    for item in doc.items:
+        env.note_dependency(item.path)
 
 
 def setup(app: Sphinx) -> ExtensionMetadata:
