@@ -144,7 +144,8 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
         document_level_section += title_node
         document_level_section += target_node
 
-        # Create a list of sections for all items, not yet nested based on depth
+        # Create a list of sections for all active items, not yet nested based on depth (Doorstop does not return
+        # inactive items in this list)
         item_sections = [
             (
                 item.depth - 1,
@@ -170,6 +171,7 @@ def add_doorstop_files_to_sphinx_rebuild_dependencies(
     # Add the document config file to the document dependencies
     env.note_dependency(doc.config)
 
-    # Also add all items to the document dependencies
-    for item in doc.items:
+    # Also add all items to the document dependencies. Use `_iter()` instead of `items` to also include inactive items.
+    # If these change, we also want to rebuild to pick up if they changed to active.
+    for item in doc._iter():
         env.note_dependency(item.path)
