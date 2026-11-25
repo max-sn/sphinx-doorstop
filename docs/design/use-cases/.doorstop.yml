@@ -1,0 +1,13 @@
+settings:
+  digits: '2'
+  itemformat: markdown
+  prefix: UC
+  sep: ''
+attributes:
+  defaults:
+    verification_method: inspect
+  reviewed:
+    - verification_method
+  publish:
+    - author
+    - verification_method

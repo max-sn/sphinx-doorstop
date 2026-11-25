@@ -1,0 +1,87 @@
+[project]
+name = "sphinx-doorstop"
+version = "0.0.1.dev0"
+description = "A Sphinx extension allowing to include Doorstop documents and items in your Sphinx build."
+readme = "README.rst"
+requires-python = ">=3.13"
+license = "LGPL-3.0-or-later"
+authors = [{ name = "M.J.W. Snippe", email = "maxsnippe@gmail.com" }]
+keywords = [
+  "documentation",
+  "doorstop",
+  "requirements-management",
+  "sphinx",
+  "traceability",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Framework :: Sphinx :: Extension",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Topic :: Documentation :: Sphinx",
+  "Topic :: Software Development :: Documentation",
+  "Topic :: Text Editors :: Documentation",
+]
+dependencies = [
+  "docutils>=0.23",
+  "doorstop>=3.2",
+  "myst-parser>=5.2.0",
+  "sphinx>=9.2.0",
+]
+
+[dependency-groups]
+dev = [
+  "sphinx-autobuild>=2025.8.25",
+]
+security = [
+  "bandit>=1.9.4",
+]
+style = [
+  "check-dependencies>=2.0.1",
+  "ruff>=0.17.5",
+]
+test = [
+  "packaging>=26.3",
+  "pytest>=9.2.0",
+]
+test-runner = [
+  "tox>=4.67.15",
+  "tox-uv>=1.37.9",
+]
+type = [
+  "ty>=0.0.107",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.9,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.tox]
+requires = ["tox>=4", "tox-uv-bare>=1"]
+env_list = [{ product = [["3.13", "3.14", "3.15"], ["test", "type"]] }, "style", "security"]
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+dependency_groups = [
+  { replace = "if", condition = "factor.test", then = "test", extend = true },
+  { replace = "if", condition = "factor.type", then = "type", extend = true },
+]
+commands = [
+  { replace = "if", condition = "factor.test", then = [["pytest"]], extend = true },
+  { replace = "if", condition = "factor.type", then = [["ty", "check", "{posargs:src}"]], extend = true },
+]
+
+[tool.tox.env.style]
+runner = "uv-venv-lock-runner"
+description = "run style checking via ruff"
+dependency_groups = ["style"]
+commands = [["ruff", "check", "{posargs:src}"], ["check-dependencies", "--verbose", "{posargs:src}"]]
+
+[tool.tox.env.security]
+runner = "uv-venv-lock-runner"
+description = "Run security scanning on code base"
+dependency_groups = ["security"]
+commands = [["bandit", "-r", "./src"]]
