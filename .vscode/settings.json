@@ -8,5 +8,9 @@
         "editor.rulers": [
             80, 120
         ]
+    },
+    "[markdown]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }
