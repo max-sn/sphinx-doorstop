@@ -26,7 +26,7 @@ Update the contents of ``./use-cases/UC00.md`` to resemble:
 
 .. literalinclude:: ../design/use-cases/UC00.md
     :language: markdown
-    :emphasize-lines: 6, 11-13
+    :emphasize-lines: 6, 11-
 
 Create a (normative) item with ``doorstop add``, e.g.:
 
@@ -43,7 +43,7 @@ Add a header and text:
 
 .. literalinclude:: ../design/use-cases/UC01.md
     :language: markdown
-    :emphasize-lines: 11-13
+    :emphasize-lines: 11-
 
 Now you have a very basic Doorstop document that you can include in your Sphinx
 build.
