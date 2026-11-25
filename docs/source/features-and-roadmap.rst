@@ -14,9 +14,9 @@ Features and roadmap
     * - Include item assets
       - ☐ Todo
     * - Include review status
-      - ☐ Todo
+      - ☑ Done
     * - Include published attributes
-      - ☐ Todo
+      - ☑ Done
     * - Include item index
       - ☐ Todo
     * - Include item links

@@ -7,6 +7,7 @@ from docutils.parsers.rst import directives
 from doorstop import build
 from myst_parser.parsers.docutils_ import Parser
 from myst_parser.parsers.sphinx_ import MystParser
+from sphinx.util import logging
 from sphinx.util.docutils import SphinxDirective, new_document
 
 from sphinx_doorstop.exceptions import SphinxDoorstopError
@@ -17,6 +18,8 @@ if TYPE_CHECKING:
     from sphinx.environment import BuildEnvironment
 
     from sphinx_doorstop.domain import SphinxDoorstopDomain
+
+logger = logging.getLogger(__name__)
 
 
 class SphinxDoorstopDocumentDirective(SphinxDirective):
@@ -99,12 +102,28 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
 
         for name, value in [
             ("UID", doorstop_item.uid),
-            ("Status", item.attribute("status")),
+            ("Reviewed", item.reviewed),
         ]:
             if value is not None:
                 field = nodes.field()
 
                 field += nodes.field_name(text=name)
+                body = nodes.field_body()
+
+                body += nodes.paragraph(text=str(value))
+
+                field += body
+                fields += field
+
+        for name in item.document._attribute_publish:
+            if (value := item.attribute(name)) is not None:
+                field = nodes.field()
+
+                formatted_name = format_custom_attribute_name(
+                    name, self.config["doorstop_custom_attribute_name_map"]
+                )
+
+                field += nodes.field_name(text=formatted_name)
                 body = nodes.field_body()
 
                 body += nodes.paragraph(text=str(value))
@@ -163,6 +182,33 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
             last_section_of_current_level += item_section
 
         return document_level_section
+
+
+def default_custom_attribute_formatter(name: str) -> str:
+    return name.replace("_", " ").replace("-", " ").capitalize()
+
+
+def format_custom_attribute_name(name: str, name_map: dict[str, str] | None) -> str:
+    """
+    This function will format a custom attribute name for publishing in the Sphinx build. The ``name_map`` argument is
+    the value that the user supplied for :confval:`doorstop_custom_attribute_formatter`.
+    """
+    if name_map is None:
+        return default_custom_attribute_formatter(name)
+    if isinstance(name_map, dict):
+        if name_map == {}:
+            return name
+        if name in name_map:
+            return name_map[name]
+        logger.warning(
+            f"Custom attribute name formatter is a dict but has no entry for {name}, using the default formatter."
+        )
+        return default_custom_attribute_formatter(name)
+    else:
+        logger.warning(
+            "Invalid custom attribute formatter, using the default formatter."
+        )
+        return default_custom_attribute_formatter(name)
 
 
 def add_doorstop_files_to_sphinx_rebuild_dependencies(
