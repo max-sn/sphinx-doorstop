@@ -25,7 +25,7 @@ jobs:
       - name: Build
         run: uv build
       - name: Add release artifacts
-        uses: actions/upload-artifact@7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: dist
           path: dist/
