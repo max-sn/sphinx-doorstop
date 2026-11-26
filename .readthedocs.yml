@@ -9,6 +9,11 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.13"
+  jobs:
+    build:
+      html:
+        - uv run --no-sync --no-dev sphinx-build --show-traceback --jobs 1 --builder html --doctree-dir _build/doctrees --define language=en ./docs/source $READTHEDOCS_OUTPUT/html
+
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

@@ -27,3 +27,5 @@ Features and roadmap
       - ☐ Todo
     * - Visualize traceability for one item
       - ☐ Todo
+    * - Allow parallel builds (implement domain data merge)
+      - ☐ Todo
