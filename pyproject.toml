@@ -32,6 +32,12 @@ dependencies = [
   "sphinx>=9.2.0",
 ]
 
+[project.urls]
+Documentation = "https://sphinx-doorstop.readthedocs.io"
+Repository = "https://github.com/max-sn/sphinx-doorstop.git"
+Issues = "https://github.com/max-sn/sphinx-doorstop/issues"
+
+
 [dependency-groups]
 dev = [
   "sphinx-autobuild>=2025.8.25",
