@@ -1,0 +1,22 @@
+name: Run CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v10.4.0
+        with:
+          enable-cache: false
+      - name: Install
+        run: uv sync --locked --all-groups
+      - name: Tox
+        run: uv run tox

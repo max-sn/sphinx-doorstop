@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from pathlib import Path
 
 from sphinx.application import Sphinx
