@@ -24,5 +24,10 @@ jobs:
           enable-cache: false
       - name: Build
         run: uv build
+      - name: Add release artifacts
+        uses: actions/upload-artifact@7.02
+        with:
+          name: dist
+          path: dist/
       - name: Publish
-        run: uv publish --publish-url https://test.pypi.org/legacy/
+        run: uv publish
