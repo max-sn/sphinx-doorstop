@@ -20,5 +20,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.4.0
         with:
           enable-cache: false
-      - run: uv build
-      - run: uv publish --publish-url https://test.pypi.org/legacy/
+      - name: Build
+        run: uv build
+      - name: Publish
+        run: uv publish --publish-url https://test.pypi.org/legacy/
