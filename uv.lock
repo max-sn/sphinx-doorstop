@@ -769,7 +769,7 @@ wheels = [
 
 [[package]]
 name = "sphinx-doorstop"
-version = "0.0.1.dev0"
+version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "docutils" },
