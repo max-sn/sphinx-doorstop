@@ -77,6 +77,48 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
             )
         ]
 
+    @staticmethod
+    def add_default_attributes_to_field_list(
+        item: doorstop.Item, fields: nodes.field_list
+    ) -> nodes.field_list:
+        for name, value in [
+            ("UID", item.uid),
+            ("Reviewed", item.reviewed),
+        ]:
+            if value is not None:
+                field = nodes.field()
+
+                field += nodes.field_name(text=name)
+                body = nodes.field_body()
+
+                body += nodes.paragraph(text=str(value))
+
+                field += body
+                fields += field
+        return fields
+
+    @staticmethod
+    def add_custom_attributes_to_field_list(
+        item: doorstop.Item,
+        fields: nodes.field_list,
+        name_map: dict[str, str] | None,
+    ) -> nodes.field_list:
+        if item.document._attribute_publish is not None:
+            for name in item.document._attribute_publish:
+                if (value := item.attribute(name)) is not None:
+                    field = nodes.field()
+
+                    formatted_name = format_custom_attribute_name(name, name_map)
+
+                    field += nodes.field_name(text=formatted_name)
+                    body = nodes.field_body()
+
+                    body += nodes.paragraph(text=str(value))
+
+                    field += body
+                    fields += field
+        return fields
+
     def create_item_section(
         self,
         item: doorstop.Item,
@@ -98,38 +140,13 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
         section += nodes.title(heading, heading)
         section += nodes.target("", "", ids=[doorstop_item.anchor])
 
+        # Add default and custom attributes (if present) to section
         fields = nodes.field_list()
 
-        for name, value in [
-            ("UID", doorstop_item.uid),
-            ("Reviewed", item.reviewed),
-        ]:
-            if value is not None:
-                field = nodes.field()
-
-                field += nodes.field_name(text=name)
-                body = nodes.field_body()
-
-                body += nodes.paragraph(text=str(value))
-
-                field += body
-                fields += field
-
-        for name in item.document._attribute_publish:
-            if (value := item.attribute(name)) is not None:
-                field = nodes.field()
-
-                formatted_name = format_custom_attribute_name(
-                    name, self.config["doorstop_custom_attribute_name_map"]
-                )
-
-                field += nodes.field_name(text=formatted_name)
-                body = nodes.field_body()
-
-                body += nodes.paragraph(text=str(value))
-
-                field += body
-                fields += field
+        fields = self.add_default_attributes_to_field_list(item, fields)
+        fields = self.add_custom_attributes_to_field_list(
+            item, fields, self.config["doorstop_custom_attribute_name_map"]
+        )
 
         section += fields
 
@@ -143,6 +160,12 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
         # Add all parsed nodes from the markdown contents directly to the section
         for child in docutils_doc.children:
             section += child
+
+        # Update the URI for all included images that use the assets directory
+        for img in section.findall(nodes.image):
+            img["uri"] = doorstop_document_relative_path_to_source_relative_path(
+                img, Path(item.document.path), self.env.srcdir
+            )
 
         return section
 
@@ -221,3 +244,14 @@ def add_doorstop_files_to_sphinx_rebuild_dependencies(
     # If these change, we also want to rebuild to pick up if they changed to active.
     for item in doc._iter():
         env.note_dependency(item.path)
+
+
+def doorstop_document_relative_path_to_source_relative_path(
+    img: nodes.image, doc_path: Path, source_path: Path
+) -> str:
+    asset_uri = img["uri"]
+
+    if "://" in asset_uri:
+        return asset_uri
+    absolute_asset_path = (doc_path / Path(asset_uri)).resolve()
+    return absolute_asset_path.relative_to(source_path, walk_up=True).as_posix()
