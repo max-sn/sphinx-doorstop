@@ -1,6 +1,6 @@
 [project]
 name = "sphinx-doorstop"
-version = "0.0.1"
+version = "0.0.2"
 description = "A Sphinx extension allowing to include Doorstop documents and items in your Sphinx build."
 readme = "README.rst"
 requires-python = ">=3.13"
