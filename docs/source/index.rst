@@ -7,4 +7,5 @@
    quickstart
    howtos
    features-and-roadmap
+   changelog
    reference
