@@ -77,6 +77,48 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
             )
         ]
 
+    @staticmethod
+    def add_default_attributes_to_field_list(
+        item: doorstop.Item, fields: nodes.field_list
+    ) -> nodes.field_list:
+        for name, value in [
+            ("UID", item.uid),
+            ("Reviewed", item.reviewed),
+        ]:
+            if value is not None:
+                field = nodes.field()
+
+                field += nodes.field_name(text=name)
+                body = nodes.field_body()
+
+                body += nodes.paragraph(text=str(value))
+
+                field += body
+                fields += field
+        return fields
+
+    @staticmethod
+    def add_custom_attributes_to_field_list(
+        item: doorstop.Item,
+        fields: nodes.field_list,
+        name_map: dict[str, str] | None,
+    ) -> nodes.field_list:
+        if item.document._attribute_publish is not None:
+            for name in item.document._attribute_publish:
+                if (value := item.attribute(name)) is not None:
+                    field = nodes.field()
+
+                    formatted_name = format_custom_attribute_name(name, name_map)
+
+                    field += nodes.field_name(text=formatted_name)
+                    body = nodes.field_body()
+
+                    body += nodes.paragraph(text=str(value))
+
+                    field += body
+                    fields += field
+        return fields
+
     def create_item_section(
         self,
         item: doorstop.Item,
@@ -98,38 +140,13 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
         section += nodes.title(heading, heading)
         section += nodes.target("", "", ids=[doorstop_item.anchor])
 
+        # Add default and custom attributes (if present) to section
         fields = nodes.field_list()
 
-        for name, value in [
-            ("UID", doorstop_item.uid),
-            ("Reviewed", item.reviewed),
-        ]:
-            if value is not None:
-                field = nodes.field()
-
-                field += nodes.field_name(text=name)
-                body = nodes.field_body()
-
-                body += nodes.paragraph(text=str(value))
-
-                field += body
-                fields += field
-
-        for name in item.document._attribute_publish:
-            if (value := item.attribute(name)) is not None:
-                field = nodes.field()
-
-                formatted_name = format_custom_attribute_name(
-                    name, self.config["doorstop_custom_attribute_name_map"]
-                )
-
-                field += nodes.field_name(text=formatted_name)
-                body = nodes.field_body()
-
-                body += nodes.paragraph(text=str(value))
-
-                field += body
-                fields += field
+        fields = self.add_default_attributes_to_field_list(item, fields)
+        fields = self.add_custom_attributes_to_field_list(
+            item, fields, self.config["doorstop_custom_attribute_name_map"]
+        )
 
         section += fields
 
