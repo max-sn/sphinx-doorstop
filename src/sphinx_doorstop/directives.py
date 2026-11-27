@@ -161,6 +161,12 @@ class SphinxDoorstopDocumentDirective(SphinxDirective):
         for child in docutils_doc.children:
             section += child
 
+        # Update the URI for all included images that use the assets directory
+        for img in section.findall(nodes.image):
+            img["uri"] = doorstop_document_relative_path_to_source_relative_path(
+                img, Path(item.document.path), self.env.srcdir
+            )
+
         return section
 
     def create_document_section(
@@ -238,3 +244,14 @@ def add_doorstop_files_to_sphinx_rebuild_dependencies(
     # If these change, we also want to rebuild to pick up if they changed to active.
     for item in doc._iter():
         env.note_dependency(item.path)
+
+
+def doorstop_document_relative_path_to_source_relative_path(
+    img: nodes.image, doc_path: Path, source_path: Path
+) -> str:
+    asset_uri = img["uri"]
+
+    if "://" in asset_uri:
+        return asset_uri
+    absolute_asset_path = (doc_path / Path(asset_uri)).resolve()
+    return absolute_asset_path.relative_to(source_path, walk_up=True).as_posix()
